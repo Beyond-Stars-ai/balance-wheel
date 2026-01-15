@@ -40,6 +40,12 @@ extern UART_HandleTypeDef huart1;
 
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern DMA_HandleTypeDef hdma_usart1_rx;
+
+extern TIM_HandleTypeDef htim3;
+
+extern TIM_HandleTypeDef htim4;
+
+extern TIM_HandleTypeDef htim8;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -60,6 +66,18 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define Motor1_EncA_Pin GPIO_PIN_6
+#define Motor1_EncA_GPIO_Port GPIOA
+#define Motor1_EncB_Pin GPIO_PIN_7
+#define Motor1_EncB_GPIO_Port GPIOA
+#define Motor1_PWM_A_Pin GPIO_PIN_6
+#define Motor1_PWM_A_GPIO_Port GPIOC
+#define Motor1_PWM_B_Pin GPIO_PIN_7
+#define Motor1_PWM_B_GPIO_Port GPIOC
+#define Motor2_PWM_A_Pin GPIO_PIN_8
+#define Motor2_PWM_A_GPIO_Port GPIOC
+#define Motor2_PWM_B_Pin GPIO_PIN_9
+#define Motor2_PWM_B_GPIO_Port GPIOC
 #define KEY_Pin GPIO_PIN_8
 #define KEY_GPIO_Port GPIOA
 #define KEY_EXTI_IRQn EXTI9_5_IRQn
@@ -67,6 +85,10 @@ void Error_Handler(void);
 #define Beep_GPIO_Port GPIOA
 #define LED_Pin GPIO_PIN_3
 #define LED_GPIO_Port GPIOB
+#define Motor2_EncA_Pin GPIO_PIN_6
+#define Motor2_EncA_GPIO_Port GPIOB
+#define Motor2_EncB_Pin GPIO_PIN_7
+#define Motor2_EncB_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

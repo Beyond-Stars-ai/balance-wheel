@@ -61,6 +61,13 @@ const osThreadAttr_t BTTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for MotorTask */
+osThreadId_t MotorTaskHandle;
+const osThreadAttr_t MotorTask_attributes = {
+  .name = "MotorTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -69,6 +76,7 @@ const osThreadAttr_t BTTask_attributes = {
 
 void StartDefaultTask(void *argument);
 void StartBTTask(void *argument);
+void StartMotorTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -105,6 +113,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of BTTask */
   BTTaskHandle = osThreadNew(StartBTTask, NULL, &BTTask_attributes);
 
+  /* creation of MotorTask */
+  MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -125,7 +136,29 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+
+  // 启动UART1的DMA接收
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, receiveData, sizeof(receiveData));
+
+  // 初始化PWM
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 0);  // Motor1 正转 PWM
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 0);  // Motor1 反转 PWM
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 0);  // Motor2 正转 PWM
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, 0);  // Motor2 反转 PWM
+
+  // 启动TIM8基础定时器
+  HAL_TIM_Base_Start(&htim8);
+
+  // 启动TIM8的四个PWM通道
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
+
+  // 启动编码定时器 
+  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+
   /* Infinite loop */
   for(;;)
   {
@@ -152,6 +185,24 @@ void StartBTTask(void *argument)
     osDelay(1);
   }
   /* USER CODE END StartBTTask */
+}
+
+/* USER CODE BEGIN Header_StartMotorTask */
+/**
+* @brief Function implementing the MotorTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartMotorTask */
+void StartMotorTask(void *argument)
+{
+  /* USER CODE BEGIN StartMotorTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartMotorTask */
 }
 
 /* Private application code --------------------------------------------------*/
