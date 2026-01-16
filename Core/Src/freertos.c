@@ -25,7 +25,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "motor.h"
+#include "encoder.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,6 +37,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 uint8_t receiveData[18];
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -140,12 +142,6 @@ void StartDefaultTask(void *argument)
   // 启动UART1的DMA接收
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, receiveData, sizeof(receiveData));
 
-  // 初始化PWM
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 0);  // Motor1 正转 PWM
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 0);  // Motor1 反转 PWM
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 0);  // Motor2 正转 PWM
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, 0);  // Motor2 反转 PWM
-
   // 启动TIM8基础定时器
   HAL_TIM_Base_Start(&htim8);
 
@@ -154,6 +150,12 @@ void StartDefaultTask(void *argument)
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
+
+  // 初始化PWM
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 0);  // Motor1 正转 PWM
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 0);  // Motor1 反转 PWM
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 0);  // Motor2 正转 PWM
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, 0);  // Motor2 反转 PWM
 
   // 启动编码定时器 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
@@ -200,7 +202,15 @@ void StartMotorTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+
+    // 前进（左+、右+）
+    Motor_SetPWM(80, 80);
+    osDelay(1000);
+
+    // 后退（左-、右-）
+    Motor_SetPWM(-80, -80);
+    osDelay(1000);
+
   }
   /* USER CODE END StartMotorTask */
 }
@@ -226,6 +236,18 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
   osDelay(1);
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, receiveData, sizeof(receiveData));
 }
+
+// void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+// {
+//   if(htim->Instance == TIM3)
+//   {
+//     // 处理TIM3溢出
+//   }
+//   else if(htim->Instance == TIM4)
+//   {
+//     // 处理TIM4溢出
+//   }
+// }
 
 // 不定长定时DMA中断接收（标本）
 // void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)

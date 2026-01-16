@@ -178,7 +178,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+  else if(htim->Instance == TIM3)
+  {
+    // 处理TIM3溢出
+  }
+  else if(htim->Instance == TIM4)
+  {
+    // 处理TIM4溢出
+  }
   /* USER CODE END Callback 1 */
 }
 
