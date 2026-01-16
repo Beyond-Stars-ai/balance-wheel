@@ -11,4 +11,6 @@ typedef enum {
 
 int Read_Encoder(Motor_ID MYTIMX);
 
+int Read_Position(Motor_ID MYTIMX);
+
 #endif

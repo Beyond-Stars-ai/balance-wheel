@@ -25,6 +25,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <string.h>
+
 #include "motor.h"
 #include "encoder.h"
 /* USER CODE END Includes */
@@ -37,6 +40,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 uint8_t receiveData[18];
+
+int16_t Encoder_Left = 0,Encoder_Right = 0; //速度编码
+int16_t Position_Left ,Position_Right;      //位置编码
+
+int16_t Left_target = -5000,Right_target = -5000; //目标位置
 
 /* USER CODE END PD */
 
@@ -139,8 +147,8 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
 
-  // 启动UART1的DMA接收
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, receiveData, sizeof(receiveData));
+  // // 启动UART1的DMA接收
+  // HAL_UARTEx_ReceiveToIdle_DMA(&huart1, receiveData, sizeof(receiveData));
 
   // 启动TIM8基础定时器
   HAL_TIM_Base_Start(&htim8);
@@ -184,7 +192,12 @@ void StartBTTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    // Encoder_Left+=Read_Encoder(MOTOR_ID_ML);            				
+		// Encoder_Right+=-Read_Encoder(MOTOR_ID_MR); 
+   
+    // sprintf((char *)receiveData, "L:%d\t R:%d\r\n", Encoder_Left, Encoder_Right);       					
+    // HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
+    osDelay(100);
   }
   /* USER CODE END StartBTTask */
 }
@@ -199,17 +212,28 @@ void StartBTTask(void *argument)
 void StartMotorTask(void *argument)
 {
   /* USER CODE BEGIN StartMotorTask */
+  int motor_L,motor_R;
   /* Infinite loop */
   for(;;)
   {
+    // // 前进（左+、右+）
+    // Motor_SetPWM(80, 80);
+    // osDelay(1000);
 
-    // 前进（左+、右+）
-    Motor_SetPWM(80, 80);
-    osDelay(1000);
+    // // 后退（左-、右-）
+    // Motor_SetPWM(-80, -80);
+    // osDelay(1000);
+    
+    //编码器求位置
+		Position_Left = Read_Position(MOTOR_ID_ML);          					
+		Position_Right = -Read_Position(MOTOR_ID_MR); 
 
-    // 后退（左-、右-）
-    Motor_SetPWM(-80, -80);
-    osDelay(1000);
+    //速度PID
+		motor_L = Position_PID(Position_Left,Left_target); 
+		motor_R = Position_PID(Position_Right,Right_target);
+
+    Motor_SetPWM(motor_L,motor_R);
+    osDelay(10);
 
   }
   /* USER CODE END StartMotorTask */
@@ -229,13 +253,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   }
 }
 
-//不定长定时DMA中断接收
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-{
-  HAL_UART_Transmit_DMA(&huart1, receiveData, sizeof(receiveData));
-  osDelay(1);
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, receiveData, sizeof(receiveData));
-}
+// //不定长定时DMA中断接收
+// void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+// {
+//   HAL_UART_Transmit_DMA(&huart1, receiveData, sizeof(receiveData));
+//   osDelay(1);
+//   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, receiveData, sizeof(receiveData));
+// }
 
 // void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 // {
@@ -249,12 +273,4 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 //   }
 // }
 
-// 不定长定时DMA中断接收（标本）
-// void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-// {
-//   HAL_UART_Transmit_DMA(&huart2, receiveData, sizeof(receiveData));
-//   osDelay(1);
-//   HAL_UARTEx_ReceiveToIdle_DMA(&huart2, receiveData, sizeof(receiveData));
-// }
-/* USER CODE END Application */
 
