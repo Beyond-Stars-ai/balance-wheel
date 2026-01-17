@@ -62,3 +62,17 @@ int Position_PID (int position,int target)
 		Last_error=error;                                       //保存上一次偏差  Save the previous deviation
 		return Pwm;                                           //增量输出 Incremental output
 }
+
+int Incremental_PI (int Encoder,int Target)
+{ 	
+		static float error,Pwm,Last_error,Last_last_error;
+		error=Target-Encoder;                                  //计算偏差 Calculate deviation
+		Pwm+=Incremental_KP*(error-Last_error)+
+				 Incremental_KI*error + 
+				 Incremental_KD*(error-2*Last_error+Last_last_error);   //增量式PID控制器 Incremental PID controller
+
+		Last_error=error;	                                   //保存上一次偏差 Save the previous deviation
+		Last_last_error = Last_error;  //保存上上次偏差 Save the previous deviation
+
+		return Pwm;                                           //增量输出 Incremental output
+}

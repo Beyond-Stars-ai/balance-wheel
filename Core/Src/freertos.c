@@ -215,15 +215,7 @@ void StartMotorTask(void *argument)
   int motor_L,motor_R;
   /* Infinite loop */
   for(;;)
-  {
-    // // 前进（左+、右+）
-    // Motor_SetPWM(80, 80);
-    // osDelay(1000);
-
-    // // 后退（左-、右-）
-    // Motor_SetPWM(-80, -80);
-    // osDelay(1000);
-    
+  {    
     //编码器求位置
 		Position_Left = Read_Position(MOTOR_ID_ML);          					
 		Position_Right = -Read_Position(MOTOR_ID_MR); 
