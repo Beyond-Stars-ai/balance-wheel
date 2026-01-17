@@ -49,17 +49,42 @@ void Get_Velocity_Form_Encoder(int encoder_left,int encoder_right)
 	Velocity_Right = Rotation_Speed_R*PI*Diameter;		
 }
 
+// int Position_PID (int position,int target)
+// { 	
+// 		static float error,Pwm,Integral_error,Last_error;
+// 		error=target-position;                                  //计算偏差 Calculate deviation
+// 		Integral_error+=error;	                                 //求出偏差的积分 //Calculate the integral of the deviation
+// 		if(Integral_error>1000)Integral_error=1000;
+// 		if(Integral_error<-1000)Integral_error=-1000;
+
+// 		Pwm=Position_KP*error+Position_KI*Integral_error+Position_KD*(error-Last_error);       //位置式PID控制器 Position based PID controller
+
+// 		Last_error=error;                                       //保存上一次偏差  Save the previous deviation
+// 		return Pwm;                                           //增量输出 Incremental output
+// }
+
+static int PWM_Limit(int IN,int max,int min)
+{
+	int OUT = IN;
+	if(OUT>max) OUT = max;
+	if(OUT<min) OUT = min;
+	return OUT;
+}
+
 int Position_PID (int position,int target)
 { 	
 		static float error,Pwm,Integral_error,Last_error;
 		error=target-position;                                  //计算偏差 Calculate deviation
-		Integral_error+=error;	                                 //求出偏差的积分 //Calculate the integral of the deviation
-		if(Integral_error>1000)Integral_error=1000;
-		if(Integral_error<-1000)Integral_error=-1000;
+		Integral_error+=error;	                                 //求出偏差的积分 Calculate the integral of the deviation
+
+		Integral_error=PWM_Limit(Integral_error,Target_Velocity,-Target_Velocity); //积分限幅 Integral limit
 
 		Pwm=Position_KP*error+Position_KI*Integral_error+Position_KD*(error-Last_error);       //位置式PID控制器 Position based PID controller
 
 		Last_error=error;                                       //保存上一次偏差  Save the previous deviation
+	
+		Pwm=PWM_Limit(Pwm,Target_Velocity,-Target_Velocity);  //位置转增量输出限幅 Position conversion increase output limit
+		
 		return Pwm;                                           //增量输出 Incremental output
 }
 

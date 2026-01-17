@@ -39,12 +39,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-uint8_t receiveData[18];
+uint8_t receiveData[64];
 
-int16_t Encoder_Left = 0,Encoder_Right = 0; //速度编码
-int16_t Position_Left ,Position_Right;      //位置编码
-
-int16_t Left_target = -5000,Right_target = -5000; //目标位置
+int16_t Position_L=0,Position_R=0;          //位置编码
+int16_t Encoder_Left =0 ,Encoder_Right=0;   //速度编码
 
 /* USER CODE END PD */
 
@@ -192,11 +190,9 @@ void StartBTTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    // Encoder_Left+=Read_Encoder(MOTOR_ID_ML);            				
-		// Encoder_Right+=-Read_Encoder(MOTOR_ID_MR); 
-   
-    // sprintf((char *)receiveData, "L:%d\t R:%d\r\n", Encoder_Left, Encoder_Right);       					
-    // HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
+    sprintf((char *)receiveData,
+    "Lv:%d\t Rv:%d\r\nLp:%d\t Rp:%d\t\r\n", Encoder_Left, Encoder_Right, Position_L, Position_R);       					
+    HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
     osDelay(100);
   }
   /* USER CODE END StartBTTask */
@@ -213,16 +209,24 @@ void StartMotorTask(void *argument)
 {
   /* USER CODE BEGIN StartMotorTask */
   int motor_L,motor_R;
+  int Position_Motor_L,Position_Motor_R;
+ 
+  int16_t Target_Position = 0;
   /* Infinite loop */
   for(;;)
   {    
-    //编码器求位置
-		Position_Left = Read_Position(MOTOR_ID_ML);          					
-		Position_Right = -Read_Position(MOTOR_ID_MR); 
-
-    //速度PID
-		motor_L = Position_PID(Position_Left,Left_target); 
-		motor_R = Position_PID(Position_Right,Right_target);
+    
+		Encoder_Left = Read_Encoder(MOTOR_ID_ML);          					
+		Encoder_Right = -Read_Encoder(MOTOR_ID_MR);   
+		
+		Position_L +=Encoder_Left;
+		Position_R +=Encoder_Right;
+		
+		Position_Motor_L = Position_PID(Position_L,Target_Position);
+		Position_Motor_R = Position_PID(Position_R,Target_Position);
+		
+		motor_L = Incremental_PI(Encoder_Left,Position_Motor_L);
+		motor_R = Incremental_PI(Encoder_Right,Position_Motor_R);
 
     Motor_SetPWM(motor_L,motor_R);
     osDelay(10);
