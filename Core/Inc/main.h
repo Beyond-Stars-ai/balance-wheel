@@ -46,6 +46,8 @@ extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
 extern TIM_HandleTypeDef htim8;
+
+extern I2C_HandleTypeDef hi2c2;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

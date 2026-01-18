@@ -30,6 +30,7 @@
 
 #include "motor.h"
 #include "encoder.h"
+#include "mpu6050.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,10 +40,13 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-uint8_t receiveData[64];
+uint8_t receiveData[128];
 
 int16_t Position_L=0,Position_R=0;          //位置编码
 int16_t Encoder_Left =0 ,Encoder_Right=0;   //速度编码
+
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
 
 /* USER CODE END PD */
 
@@ -167,6 +171,9 @@ void StartDefaultTask(void *argument)
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
+  // 初始化MPU6050
+  MPU6050_Init(&hi2c2);
+
   /* Infinite loop */
   for(;;)
   {
@@ -194,6 +201,14 @@ void StartBTTask(void *argument)
     "Lv:%d\t Rv:%d\r\nLp:%d\t Rp:%d\t\r\n", Encoder_Left, Encoder_Right, Position_L, Position_R);       					
     HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
     osDelay(100);
+
+    MPU6050_ReadAccel(&hi2c2, &ax, &ay, &az);
+    MPU6050_ReadGyro(&hi2c2, &gx, &gy, &gz);
+    sprintf((char *)receiveData,
+    "Ax:%d\t Ay:%d\t Az:%d\r\nGx:%d\t Gy:%d\t Gz:%d\r\n", ax, ay, az, gx, gy, gz);
+    HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
+    osDelay(100);
+
   }
   /* USER CODE END StartBTTask */
 }
@@ -237,36 +252,6 @@ void StartMotorTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  if (GPIO_Pin == KEY_Pin)
-  {
-    osDelay(10); 
-    if (GPIO_Pin == KEY_Pin)
-    {
-      HAL_GPIO_TogglePin(Beep_GPIO_Port, Beep_Pin);
-    }
-  }
-}
 
-// //不定长定时DMA中断接收
-// void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-// {
-//   HAL_UART_Transmit_DMA(&huart1, receiveData, sizeof(receiveData));
-//   osDelay(1);
-//   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, receiveData, sizeof(receiveData));
-// }
-
-// void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-// {
-//   if(htim->Instance == TIM3)
-//   {
-//     // 处理TIM3溢出
-//   }
-//   else if(htim->Instance == TIM4)
-//   {
-//     // 处理TIM4溢出
-//   }
-// }
-
+/* USER CODE END Application */
 
