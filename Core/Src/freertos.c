@@ -200,14 +200,16 @@ void StartBTTask(void *argument)
     sprintf((char *)receiveData,
     "Lv:%d\t Rv:%d\r\nLp:%d\t Rp:%d\t\r\n", Encoder_Left, Encoder_Right, Position_L, Position_R);       					
     HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
-    osDelay(100);
+    memset(receiveData, 0, sizeof(receiveData));
+    osDelay(500);
 
     MPU6050_ReadAccel(&hi2c2, &ax, &ay, &az);
     MPU6050_ReadGyro(&hi2c2, &gx, &gy, &gz);
     sprintf((char *)receiveData,
     "Ax:%d\t Ay:%d\t Az:%d\r\nGx:%d\t Gy:%d\t Gz:%d\r\n", ax, ay, az, gx, gy, gz);
     HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
-    osDelay(100);
+    memset(receiveData, 0, sizeof(receiveData));
+    osDelay(500);
 
   }
   /* USER CODE END StartBTTask */
