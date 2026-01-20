@@ -45,8 +45,7 @@ uint8_t receiveData[128];
 int16_t Position_L=0,Position_R=0;          //位置编码
 int16_t Encoder_Left =0 ,Encoder_Right=0;   //速度编码
 
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
+MPU6050_t MPU6050; 
 
 /* USER CODE END PD */
 
@@ -203,10 +202,10 @@ void StartBTTask(void *argument)
     memset(receiveData, 0, sizeof(receiveData));
     osDelay(500);
 
-    MPU6050_ReadAccel(&hi2c2, &ax, &ay, &az);
-    MPU6050_ReadGyro(&hi2c2, &gx, &gy, &gz);
+    MPU6050_Read_All(&hi2c2, &MPU6050);
     sprintf((char *)receiveData,
-    "Ax:%d\t Ay:%d\t Az:%d\r\nGx:%d\t Gy:%d\t Gz:%d\r\n", ax, ay, az, gx, gy, gz);
+    "Ax:%dg\t Ay:%dg\t Az:%dg\r\nGx:%d°/s\t Gy:%d°/s\t Gz:%d°/s\r\n",
+    (int)MPU6050.Ax, (int)MPU6050.Ay, (int)MPU6050.Az, (int)MPU6050.Gx, (int)MPU6050.Gy, (int)MPU6050.Gz);
     HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
     memset(receiveData, 0, sizeof(receiveData));
     osDelay(500);
