@@ -198,17 +198,22 @@ void StartBTTask(void *argument)
   {
     sprintf((char *)receiveData,
     "Lv:%d\t Rv:%d\r\nLp:%d\t Rp:%d\t\r\n", Encoder_Left, Encoder_Right, Position_L, Position_R);       					
-    HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
+    HAL_UART_Transmit(&huart2, receiveData, sizeof(receiveData), 100);
     memset(receiveData, 0, sizeof(receiveData));
     osDelay(500);
 
     MPU6050_Read_All(&hi2c2, &MPU6050);
     sprintf((char *)receiveData,
-    "Ax:%dg\t Ay:%dg\t Az:%dg\r\nGx:%d°/s\t Gy:%d°/s\t Gz:%d°/s\r\n",
-    (int)MPU6050.Ax, (int)MPU6050.Ay, (int)MPU6050.Az, (int)MPU6050.Gx, (int)MPU6050.Gy, (int)MPU6050.Gz);
-    HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
+    // "Ax:%dg\t Ay:%dg\t Az:%dg\r\nGx:%d°/s\t Gy:%d°/s\t Gz:%d°/s\r\n",
+    // (int)MPU6050.Ax, (int)MPU6050.Ay, (int)MPU6050.Az, (int)MPU6050.Gx, (int)MPU6050.Gy, (int)MPU6050.Gz);
+
+    // "%d,%d,%d,%d,%d,%d\n",
+    // (int)(MPU6050.Ax*100), (int)(MPU6050.Ay*100), (int)(MPU6050.Az*100), (int)(MPU6050.Gx*100), (int)(MPU6050.Gy*100), (int)(MPU6050.Gz*100));
+    "%d,%d\n",
+    (int)(MPU6050.KalmanAngleX*100), (int)(MPU6050.KalmanAngleX*100));
+    HAL_UART_Transmit(&huart2, receiveData, sizeof(receiveData), 100);
     memset(receiveData, 0, sizeof(receiveData));
-    osDelay(500);
+    osDelay(100);
 
   }
   /* USER CODE END StartBTTask */

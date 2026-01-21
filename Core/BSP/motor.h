@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define MOTOR_MAX_PWM (700)
-#define Target_Velocity (15)
+#define Target_Velocity (10)
 
 #define PI 3.14159265							//PI圆周率  PI π
 #define Control_Frequency  200.0	//编码器读取频率  Encoder reading frequency
