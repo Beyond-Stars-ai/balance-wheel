@@ -31,6 +31,7 @@
 #include "motor.h"
 #include "encoder.h"
 #include "mpu6050.h"
+#include "pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,6 +45,8 @@ uint8_t receiveData[128];
 
 int16_t Position_L=0,Position_R=0;          //位置编码
 int16_t Encoder_Left =0 ,Encoder_Right=0;   //速度编码
+
+float Angle_Balance =0 ,Gyro_Balance =0 ,Gyro_Turn =0;
 
 MPU6050_t MPU6050; 
 
@@ -177,6 +180,10 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+    sprintf((char *)receiveData,
+    "Lv:%d\t Rv:%d\r\n", Encoder_Left, Encoder_Right);       					
+    HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
+    memset(receiveData, 0, sizeof(receiveData));
     // HAL_GPIO_TogglePin(Beep_GPIO_Port, Beep_Pin);
     osDelay(1000);
   }
@@ -193,27 +200,28 @@ void StartDefaultTask(void *argument)
 void StartBTTask(void *argument)
 {
   /* USER CODE BEGIN StartBTTask */
+  int n = 0;
   /* Infinite loop */
   for(;;)
   {
-    sprintf((char *)receiveData,
-    "Lv:%d\t Rv:%d\r\nLp:%d\t Rp:%d\t\r\n", Encoder_Left, Encoder_Right, Position_L, Position_R);       					
-    HAL_UART_Transmit(&huart2, receiveData, sizeof(receiveData), 100);
-    memset(receiveData, 0, sizeof(receiveData));
-    osDelay(500);
-
     MPU6050_Read_All(&hi2c2, &MPU6050);
-    sprintf((char *)receiveData,
-    // "Ax:%dg\t Ay:%dg\t Az:%dg\r\nGx:%d°/s\t Gy:%d°/s\t Gz:%d°/s\r\n",
-    // (int)MPU6050.Ax, (int)MPU6050.Ay, (int)MPU6050.Az, (int)MPU6050.Gx, (int)MPU6050.Gy, (int)MPU6050.Gz);
 
-    // "%d,%d,%d,%d,%d,%d\n",
-    // (int)(MPU6050.Ax*100), (int)(MPU6050.Ay*100), (int)(MPU6050.Az*100), (int)(MPU6050.Gx*100), (int)(MPU6050.Gy*100), (int)(MPU6050.Gz*100));
-    "%d,%d\n",
-    (int)(MPU6050.KalmanAngleX*100), (int)(MPU6050.KalmanAngleX*100));
-    HAL_UART_Transmit(&huart2, receiveData, sizeof(receiveData), 100);
-    memset(receiveData, 0, sizeof(receiveData));
-    osDelay(100);
+    Angle_Balance = MPU6050.KalmanAngleY;
+    Gyro_Balance = MPU6050.Gy;
+    Gyro_Turn = MPU6050.Gz;
+
+    n++;
+
+    if(n>=50)
+    {
+      printf("Ax:%dg\t Ay:%dg\t Az:%dg\r\nGx:%d°/s\t Gy:%d°/s\t Gz:%d°/s\r\n",
+      (int)MPU6050.Ax, (int)MPU6050.Ay, (int)MPU6050.Az, (int)MPU6050.Gx, (int)MPU6050.Gy, (int)MPU6050.Gz);
+      n=0;
+      // printf("Ax:%.2fg\t Ay:%.2fg\t Az:%.2fg\r\nGx:%.2f°/s\t Gy:%.2f°/s\t Gz:%.2f°/s\r\n",
+      // MPU6050.Ax, MPU6050.Ay, MPU6050.Az, MPU6050.Gx, MPU6050.Gy, MPU6050.Gz);
+      printf("Angle:%.2f°\t Gyro.Gy:%.2f°/s \t Gyro.Gz:%.2f°/s \t temperature:%.2f°C\r\n", Angle_Balance, Gyro_Balance, Gyro_Turn, MPU6050.Temperature);
+    }
+    osDelay(10);
 
   }
   /* USER CODE END StartBTTask */
@@ -230,9 +238,9 @@ void StartMotorTask(void *argument)
 {
   /* USER CODE BEGIN StartMotorTask */
   int motor_L,motor_R;
-  int Position_Motor_L,Position_Motor_R;
- 
-  int16_t Target_Position = 0;
+  // int Position_Motor_L,Position_Motor_R; 
+  // int16_t Target_Position = 0;
+  int Balance_Pwm,Velocity_Pwm,Turn_Pwm;
   /* Infinite loop */
   for(;;)
   {    
@@ -242,12 +250,13 @@ void StartMotorTask(void *argument)
 		
 		Position_L +=Encoder_Left;
 		Position_R +=Encoder_Right;
-		
-		Position_Motor_L = Position_PID(Position_L,Target_Position);
-		Position_Motor_R = Position_PID(Position_R,Target_Position);
-		
-		motor_L = Incremental_PI(Encoder_Left,Position_Motor_L);
-		motor_R = Incremental_PI(Encoder_Right,Position_Motor_R);
+
+    Balance_Pwm = Balance_PD(Angle_Balance,Gyro_Balance);    //平衡PID控制 
+		Velocity_Pwm = Velocity_PI(Encoder_Left,Encoder_Right);  //速度环PID控制		
+		Turn_Pwm = Turn_PD(Gyro_Turn);														//转向环PID控制  
+
+    motor_L = Balance_Pwm + Velocity_Pwm + Turn_Pwm;       //计算左轮电机最终PWM Calculate the final PWM of the left wheel motor
+		motor_R = Balance_Pwm + Velocity_Pwm - Turn_Pwm;      //计算右轮电机最终PWM Calculate the final PWM of the right wheel motor
 
     Motor_SetPWM(motor_L,motor_R);
     osDelay(10);
@@ -258,6 +267,10 @@ void StartMotorTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-
+int _write(int fd, char *ptr, int len)
+{
+    HAL_UART_Transmit(&huart2, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+    return len;
+}
 /* USER CODE END Application */
 

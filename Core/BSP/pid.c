@@ -1,19 +1,5 @@
 #include "pid.h"
 
-// 下面的pid为了好调,都放到100倍了
-
-// 直立环PD控制参数
-#define Balance_Kp  10200 // 范围0-288 Range 0-288
-#define Balance_Kd  78     // 范围0-2 Range 0-2
-
-// 速度环PI控制参数
-#define Velocity_Kp  7000 // 范围0-72 Range 0-72 6000
-#define Velocity_Ki  35    // kp/200
-
-// 转向环PD控制参数
-#define Turn_Kp  1400 // 这个根据自己的需求调，只是平衡可以不调 This can be adjusted according to one's own needs, but the balance can be left unadjusted, depending on the rotation speed
-#define Turn_Kd  10   // 范围 0-2 Range 0-2
-
 /**************************************************************************
 函数功能：直立PD控制
 入口参数：Angle:角度；Gyro：角速度
@@ -75,7 +61,7 @@ int Turn_PD(float gyro)
     Kd = Turn_Kd;
 
     //===================转向PD控制器 Turn to PD controller=================//
-    turn_PWM = Turn_Target * Kp / 100 + gyro * Kd / 100 + Move_Z; // 结合Z轴陀螺仪进行PD控制   Combining Z-axis gyroscope for PD control
+    turn_PWM = Turn_Target * Kp / 100 + gyro * Kd / 100; //+ Move_Z; // 结合Z轴陀螺仪进行PD控制   Combining Z-axis gyroscope for PD control
 
     return turn_PWM; // 转向环PWM右转为正，左转为负 Steering ring PWM: Right turn is positive, left turn is negative
 }
