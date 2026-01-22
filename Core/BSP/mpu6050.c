@@ -34,6 +34,10 @@
 #include "mpu6050.h"
 #include "math.h"
 
+#include "FreeRTOS.h"
+#include <stdio.h>
+#include <string.h>
+
 const uint16_t i2c_timeout = 100;
 const double Accel_Z_corrector = 14418.0;
 
@@ -58,6 +62,9 @@ uint8_t MPU6050_Init(I2C_HandleTypeDef *I2Cx)
     // check device ID WHO_AM_I
 
     HAL_I2C_Mem_Read(I2Cx, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, i2c_timeout);
+    
+    // 添加调试输出，检查WHO_AM_I寄存器的值
+    printf("MPU6050 WHO_AM_I: 0x%02X (expected: 0x68)\r\n", check);
 
     if (check == 104) // 0x68 will be returned by the sensor if everything goes well
     {
@@ -144,10 +151,27 @@ void MPU6050_Read_All(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct)
 {
     uint8_t Rec_Data[14];
     int16_t temp;
+    
+    // 检查I2C设备是否就绪
+    if(HAL_I2C_IsDeviceReady(I2Cx, MPU6050_ADDR, 3, i2c_timeout) != HAL_OK) {
+        printf("MPU6050 not ready!\r\n");
+        return;
+    }
 
     // Read 14 BYTES of data starting from ACCEL_XOUT_H register
 
     HAL_I2C_Mem_Read(I2Cx, MPU6050_ADDR, ACCEL_XOUT_H_REG, 1, Rec_Data, 14, i2c_timeout);
+    
+    // 添加调试输出，检查原始数据
+    static uint32_t debug_counter = 0;
+    if(++debug_counter >= 100) { // 每100次读取输出一次
+        printf("MPU6050 Raw Data: ");
+        for(int i = 0; i < 14; i++) {
+            printf("%02X ", Rec_Data[i]);
+        }
+        printf("\r\n");
+        debug_counter = 0;
+    }
 
     DataStruct->Accel_X_RAW = (int16_t)(Rec_Data[0] << 8 | Rec_Data[1]);
     DataStruct->Accel_Y_RAW = (int16_t)(Rec_Data[2] << 8 | Rec_Data[3]);

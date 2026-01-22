@@ -1,7 +1,5 @@
 #include "motor.h" 
 
-// float Velocity_Left,Velocity_Right;	//车轮速度(mm/s)
-
 static int16_t PWM_Limit(int16_t IN,int16_t Limit)
 {
 	if(IN > Limit) return Limit;

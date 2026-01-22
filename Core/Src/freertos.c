@@ -236,8 +236,7 @@ void StartMotorTask(void *argument)
 {
   /* USER CODE BEGIN StartMotorTask */
   int motor_L,motor_R;
-  // int Position_Motor_L,Position_Motor_R; 
-  // int16_t Target_Position = 0;
+
   int Balance_Pwm,Velocity_Pwm,Turn_Pwm;
   /* Infinite loop */
   for(;;)
