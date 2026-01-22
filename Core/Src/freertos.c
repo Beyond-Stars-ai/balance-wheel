@@ -43,10 +43,8 @@
 /* USER CODE BEGIN PD */
 uint8_t receiveData[128];
 
-int16_t Position_L=0,Position_R=0;          //位置编码
 int16_t Encoder_Left =0 ,Encoder_Right=0;   //速度编码
-
-float Angle_Balance =0 ,Gyro_Balance =0 ,Gyro_Turn =0;
+float Angle_Balance =0 ,Gyro_Balance =0 ,Gyro_Turn =0; //mpu6050参数
 
 MPU6050_t MPU6050; 
 
@@ -219,7 +217,7 @@ void StartBTTask(void *argument)
       n=0;
       // printf("Ax:%.2fg\t Ay:%.2fg\t Az:%.2fg\r\nGx:%.2f°/s\t Gy:%.2f°/s\t Gz:%.2f°/s\r\n",
       // MPU6050.Ax, MPU6050.Ay, MPU6050.Az, MPU6050.Gx, MPU6050.Gy, MPU6050.Gz);
-      printf("Angle:%.2f°\t Gyro.Gy:%.2f°/s \t Gyro.Gz:%.2f°/s \t temperature:%.2f°C\r\n", Angle_Balance, Gyro_Balance, Gyro_Turn, MPU6050.Temperature);
+      // printf("Angle:%.2f°\t Gyro.Gy:%.2f°/s \t Gyro.Gz:%.2f°/s \t temperature:%.2f°C\r\n", Angle_Balance, Gyro_Balance, Gyro_Turn, MPU6050.Temperature);
     }
     osDelay(10);
 
@@ -248,8 +246,8 @@ void StartMotorTask(void *argument)
 		Encoder_Left = Read_Encoder(MOTOR_ID_ML);          					
 		Encoder_Right = -Read_Encoder(MOTOR_ID_MR);   
 		
-		Position_L +=Encoder_Left;
-		Position_R +=Encoder_Right;
+		// Position_L +=Encoder_Left;
+		// Position_R +=Encoder_Right;
 
     Balance_Pwm = Balance_PD(Angle_Balance,Gyro_Balance);    //平衡PID控制 
 		Velocity_Pwm = Velocity_PI(Encoder_Left,Encoder_Right);  //速度环PID控制		
@@ -258,7 +256,7 @@ void StartMotorTask(void *argument)
     motor_L = Balance_Pwm + Velocity_Pwm + Turn_Pwm;       //计算左轮电机最终PWM Calculate the final PWM of the left wheel motor
 		motor_R = Balance_Pwm + Velocity_Pwm - Turn_Pwm;      //计算右轮电机最终PWM Calculate the final PWM of the right wheel motor
 
-    Motor_SetPWM(motor_L,motor_R);
+    // Motor_SetPWM(motor_L,motor_R);
     osDelay(10);
 
   }

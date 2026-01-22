@@ -11,8 +11,8 @@ static int16_t PWM_Limit(int16_t IN,int16_t Limit)
 
 void Motor_SetPWM(int16_t left, int16_t right)
 {
-  left  = PWM_Limit(left ,MOTOR_MAX_PWM);
-  right = PWM_Limit(right ,MOTOR_MAX_PWM);
+  left  = PWM_Limit(left*1.04 ,MOTOR_MAX_PWM) *0.7;
+  right = PWM_Limit(right*0.96 ,MOTOR_MAX_PWM) *0.7;
 
   // 左轮
   if (left == 0) {
@@ -47,35 +47,4 @@ void Motor_SetPWM(int16_t left, int16_t right)
 // 	Velocity_Left = Rotation_Speed_L*PI*Diameter;		
 // 	Rotation_Speed_R = encoder_right*Control_Frequency/EncoderMultiples/Reduction_Ratio/Encoder_precision;
 // 	Velocity_Right = Rotation_Speed_R*PI*Diameter;		
-// }
-
-// int Position_PID (int position,int target)
-// { 	
-// 		static float error,Pwm,Integral_error,Last_error;
-// 		error=target-position;                                  //计算偏差 Calculate deviation
-// 		Integral_error+=error;	                                 //求出偏差的积分 Calculate the integral of the deviation
-
-// 		Integral_error=PWM_Limit(Integral_error,Target_Velocity); //积分限幅 Integral limit
-
-// 		Pwm=Position_KP*error+Position_KI*Integral_error+Position_KD*(error-Last_error);       //位置式PID控制器 Position based PID controller
-
-// 		Last_error=error;                                       //保存上一次偏差  Save the previous deviation
-	
-// 		Pwm=PWM_Limit(Pwm,Target_Velocity);  //位置转增量输出限幅 Position conversion increase output limit
-		
-// 		return Pwm;                                           //增量输出 Incremental output
-// }
-
-// int Incremental_PI (int Encoder,int Target)
-// { 	
-// 		static float error,Pwm,Last_error,Last_last_error;
-// 		error=Target-Encoder;                                  //计算偏差 Calculate deviation
-// 		Pwm+=Incremental_KP*(error-Last_error)+
-// 				 Incremental_KI*error + 
-// 				 Incremental_KD*(error-2*Last_error+Last_last_error);   //增量式PID控制器 Incremental PID controller
-
-// 		Last_error=error;	                                   //保存上一次偏差 Save the previous deviation
-// 		Last_last_error = Last_error;  //保存上上次偏差 Save the previous deviation
-
-// 		return Pwm;                                           //增量输出 Incremental output
 // }

@@ -4,7 +4,7 @@
 #include "main.h"
 #include <stdint.h>
 
-#define MOTOR_MAX_PWM (700)
+#define MOTOR_MAX_PWM (2800)
 
 #define PI 3.14159265							//PI圆周率  PI π
 #define Control_Frequency  200.0	//编码器读取频率  Encoder reading frequency
@@ -20,13 +20,13 @@
 // #define Position_KI (0.013)
 // #define Position_KD (0.05)
 
-#define Position_KP (0.8)
-#define Position_KI (0.001)
-#define Position_KD (0.5)
+// #define Position_KP (0.8)
+// #define Position_KI (0.001)
+// #define Position_KD (0.5)
 
-#define Incremental_KP (20)
-#define Incremental_KI (8)
-#define Incremental_KD (2)
+// #define Incremental_KP (20)
+// #define Incremental_KI (8)
+// #define Incremental_KD (2)
 
 // #define Incremental_KP (20)
 // #define Incremental_KI (1)
