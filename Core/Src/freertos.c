@@ -30,8 +30,8 @@
 
 #include "motor.h"
 #include "encoder.h"
-#include "mpu6050.h"
 #include "pid.h"
+#include "oled.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +46,7 @@ uint8_t receiveData[128];
 int16_t Encoder_Left =0 ,Encoder_Right=0;   //速度编码
 float Angle_Balance =0 ,Gyro_Balance =0 ,Gyro_Turn =0; //mpu6050参数
 
-MPU6050_t MPU6050; 
+// MPU6050_t MPU6050; 
 
 /* USER CODE END PD */
 
@@ -172,7 +172,7 @@ void StartDefaultTask(void *argument)
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
   // 初始化MPU6050
-  MPU6050_Init(&hi2c2);
+  // MPU6050_Init(&hi2c2);
 
   /* Infinite loop */
   for(;;)
@@ -198,28 +198,37 @@ void StartDefaultTask(void *argument)
 void StartBTTask(void *argument)
 {
   /* USER CODE BEGIN StartBTTask */
-  int n = 0;
+  // int n = 0;
   /* Infinite loop */
+  
+  
   for(;;)
   {
-    MPU6050_Read_All(&hi2c2, &MPU6050);
+    // MPU6050_Read_All(&hi2c2, &MPU6050);
+    // Angle_Balance = MPU6050.KalmanAngleY;
+    // Gyro_Balance = MPU6050.Gy;
+    // Gyro_Turn = MPU6050.Gz;
 
-    Angle_Balance = MPU6050.KalmanAngleY;
-    Gyro_Balance = MPU6050.Gy;
-    Gyro_Turn = MPU6050.Gz;
+    // n++;
 
-    n++;
-
-    if(n>=50)
+    // if(n>=50)
+    // {
+    //   printf("Ax:%dg\t Ay:%dg\t Az:%dg\r\nGx:%d°/s\t Gy:%d°/s\t Gz:%d°/s\r\n",
+    //   (int)MPU6050.Ax, (int)MPU6050.Ay, (int)MPU6050.Az, (int)MPU6050.Gx, (int)MPU6050.Gy, (int)MPU6050.Gz);
+    //   n=0;
+    //   // printf("Ax:%.2fg\t Ay:%.2fg\t Az:%.2fg\r\nGx:%.2f°/s\t Gy:%.2f°/s\t Gz:%.2f°/s\r\n",
+    //   // MPU6050.Ax, MPU6050.Ay, MPU6050.Az, MPU6050.Gx, MPU6050.Gy, MPU6050.Gz);
+    //   // printf("Angle:%.2f°\t Gyro.Gy:%.2f°/s \t Gyro.Gz:%.2f°/s \t temperature:%.2f°C\r\n", Angle_Balance, Gyro_Balance, Gyro_Turn, MPU6050.Temperature);
+    // }
+    for (uint8_t i = 0; i < 256; i++)
     {
-      printf("Ax:%dg\t Ay:%dg\t Az:%dg\r\nGx:%d°/s\t Gy:%d°/s\t Gz:%d°/s\r\n",
-      (int)MPU6050.Ax, (int)MPU6050.Ay, (int)MPU6050.Az, (int)MPU6050.Gx, (int)MPU6050.Gy, (int)MPU6050.Gz);
-      n=0;
-      // printf("Ax:%.2fg\t Ay:%.2fg\t Az:%.2fg\r\nGx:%.2f°/s\t Gy:%.2f°/s\t Gz:%.2f°/s\r\n",
-      // MPU6050.Ax, MPU6050.Ay, MPU6050.Az, MPU6050.Gx, MPU6050.Gy, MPU6050.Gz);
-      // printf("Angle:%.2f°\t Gyro.Gy:%.2f°/s \t Gyro.Gz:%.2f°/s \t temperature:%.2f°C\r\n", Angle_Balance, Gyro_Balance, Gyro_Turn, MPU6050.Temperature);
+      OLED_NewFrame();
+      OLED_DrawImage((128 - (bilibiliImg.w)) / 2, 0, &bilibiliImg, OLED_COLOR_NORMAL);
+      OLED_PrintString(128 - i, 64 - 16, "波特律动hello", &font16x16, OLED_COLOR_NORMAL);
+      OLED_ShowFrame();
+      osDelay(10);
     }
-    osDelay(10);
+    osDelay(1);
 
   }
   /* USER CODE END StartBTTask */
