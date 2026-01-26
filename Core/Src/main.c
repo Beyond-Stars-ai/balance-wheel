@@ -28,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "oled.h"
+#include "mpu6050.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -99,9 +100,14 @@ int main(void)
   MX_TIM4_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(20); 
+  // 初始化OLED
+  HAL_Delay(1000); 
   OLED_Init();
+  // // 初始化MPU6050
+  // HAL_Delay(100);
+  // MPU6050_Init(&hi2c2);
   /* USER CODE END 2 */
 
   /* Init scheduler */
