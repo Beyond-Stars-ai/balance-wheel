@@ -9,7 +9,7 @@ int Balance_PD(float Angle, float Gyro)
 {
     float Angle_bias, Gyro_bias;
     int balance;
-    Angle_bias = /* Mid_Angle */ - Angle; // 求出平衡的角度中值 和机械相关 Find the median angle and mechanical correlation for equilibrium
+    Angle_bias =  Mid_Angle  - Angle; // 求出平衡的角度中值 和机械相关 Find the median angle and mechanical correlation for equilibrium
     Gyro_bias = - Gyro;
     balance = -Balance_Kp / 100 * Angle_bias - Gyro_bias * Balance_Kd / 100; // 计算平衡控制的电机PWM  PD控制   kp是P系数 kd是D系数  Calculate the motor PWM PD control for balance control kp is the P coefficient kd is the D coefficient
 
@@ -55,10 +55,9 @@ int Velocity_PI(int encoder_left, int encoder_right)
 int Turn_PD(float gyro)
 {
     static float Turn_Target, turn_PWM;
-    float Kp = Turn_Kp, Kd; // 修改转向速度，请修改Turn_Amplitude即可 To modify the steering speed, please modify Turn_Smplitude
+    float Kp = Turn_Kp, Kd = Turn_Kd; // 修改转向速度，请修改Turn_Amplitude即可 To modify the steering speed, please modify Turn_Smplitude
 
     Turn_Target = 0;
-    Kd = Turn_Kd;
 
     //===================转向PD控制器 Turn to PD controller=================//
     turn_PWM = Turn_Target * Kp / 100 + gyro * Kd / 100; //+ Move_Z; // 结合Z轴陀螺仪进行PD控制   Combining Z-axis gyroscope for PD control
