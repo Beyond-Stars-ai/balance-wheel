@@ -72,10 +72,10 @@ const osThreadAttr_t DebugTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for BTTask */
-osThreadId_t BTTaskHandle;
-const osThreadAttr_t BTTask_attributes = {
-  .name = "BTTask",
+/* Definitions for OLEDTask */
+osThreadId_t OLEDTaskHandle;
+const osThreadAttr_t OLEDTask_attributes = {
+  .name = "OLEDTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
@@ -92,8 +92,8 @@ const osThreadAttr_t MotorTask_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
-void StartBTTask(void *argument);
+void StartDebugTask(void *argument);
+void StartOLEDTask(void *argument);
 void StartMotorTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -126,10 +126,10 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of DebugTask */
-  DebugTaskHandle = osThreadNew(StartDefaultTask, NULL, &DebugTask_attributes);
+  DebugTaskHandle = osThreadNew(StartDebugTask, NULL, &DebugTask_attributes);
 
-  /* creation of BTTask */
-  BTTaskHandle = osThreadNew(StartBTTask, NULL, &BTTask_attributes);
+  /* creation of OLEDTask */
+  OLEDTaskHandle = osThreadNew(StartOLEDTask, NULL, &OLEDTask_attributes);
 
   /* creation of MotorTask */
   MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
@@ -144,19 +144,19 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_StartDebugTask */
 /**
  * @brief  Function implementing the DebugTask thread.
  * @param  argument: Not used
  * @retval None
  */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_StartDebugTask */
+void StartDebugTask(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN StartDebugTask */
 
     // 启动UART2的DMA接收
-    // HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
 
     // 启动TIM8基础定时器
     HAL_TIM_Base_Start(&htim8);
@@ -188,51 +188,39 @@ void StartDefaultTask(void *argument)
         // HAL_GPIO_TogglePin(Beep_GPIO_Port, Beep_Pin);
         osDelay(1000);
     }
-  /* USER CODE END StartDefaultTask */
+  /* USER CODE END StartDebugTask */
 }
 
-/* USER CODE BEGIN Header_StartBTTask */
+/* USER CODE BEGIN Header_StartOLEDTask */
 /**
- * @brief Function implementing the BTTask thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_StartBTTask */
-void StartBTTask(void *argument)
+* @brief Function implementing the OLEDTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartOLEDTask */
+void StartOLEDTask(void *argument)
 {
-  /* USER CODE BEGIN StartBTTask */
-    /* Infinite loop */
+  /* USER CODE BEGIN StartOLEDTask */
+  /* Infinite loop */
+  for(;;)
+  {
+      // MPU6050_Read_All(&hi2c2, &MPU6050);
+      // Angle_Balance = MPU6050.KalmanAngleY;
+      // Gyro_Balance = MPU6050.Gy;
+      // Gyro_Turn = MPU6050.Gz;
 
-    for (;;)
-    {
-        // MPU6050_Read_All(&hi2c2, &MPU6050);
-        // Angle_Balance = MPU6050.KalmanAngleY;
-        // Gyro_Balance = MPU6050.Gy;
-        // Gyro_Turn = MPU6050.Gz;
-        
-        OLED_NewFrame();
-        char strBuffer[32];
-        sprintf(strBuffer, "X:%d", (int)(Angle_X*100));
-        OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_REVERSED);
-        sprintf(strBuffer, "Y:%d", (int)(Angle_Y*100));
-        OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_REVERSED);
-        sprintf(strBuffer, "Z:%d", (int)(Angle_Z*100));
-        OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_REVERSED);
-        OLED_ShowFrame();
-        osDelay(100);
-
-        // OLED_NewFrame();
-        // char strBuffer[32];
-        // sprintf(strBuffer, "X:%.4f", Angle_X*100);
-        // OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_REVERSED);
-        // sprintf(strBuffer, "Y:%.4f", Angle_Y*100);
-        // OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_REVERSED);
-        // sprintf(strBuffer, "Z:%.4f", Angle_Z*100);
-        // OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_REVERSED);
-        // OLED_ShowFrame();
-        // osDelay(100);
-    }
-  /* USER CODE END StartBTTask */
+      OLED_NewFrame();
+      char strBuffer[32];
+      sprintf(strBuffer, "X:%d", (int)(Acc_Angle_X*100));
+      OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+      sprintf(strBuffer, "Y:%d", (int)(Acc_Angle_Y*100));
+      OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+      sprintf(strBuffer, "Z:%d", (int)(Acc_Angle_Z*100));
+      OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+      OLED_ShowFrame();
+      osDelay(100);
+  }
+  /* USER CODE END StartOLEDTask */
 }
 
 /* USER CODE BEGIN Header_StartMotorTask */
@@ -290,37 +278,45 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 }
 
-// void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-// {
-//     if (huart->Instance == USART2)
-//     {
-//         // 检查接收到的数据长度是否正确
-//         if (Size == 11 && RxBuff[0] == 0x55)
-//         {
-//             if (RxBuff[1] == 0x53)
-//             {
-//                 Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 180;
-//                 Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 180;
-//                 Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 180;
-//             }
-//             else if (RxBuff[1] == 0x52)
-//             {
-//                 Velocity_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 2000;
-//                 Velocity_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 2000;
-//             }
-//             else if (RxBuff[1] == 0x51)
-//             {
-//                 Acc_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 16 * 9.8;
-//                 Acc_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 16 * 9.8;
-//                 Acc_Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 16 * 9.8;
-//             }
-//         }
-//         // 清空接收缓冲区
-//         memset(RxBuff, 0, sizeof(RxBuff));
-//         // 重新启动DMA接收
-//         HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
-//     }
-// }
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+    if (huart->Instance == USART2)
+    {
+        // 检查接收到的数据长度是否正确
+        if (RxBuff[0] == 0x55)
+        {
+            if (RxBuff[1] == 0x53)
+            {
+                Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 180;
+                Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 180;
+                Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 180;
+            }
+            else if (RxBuff[1] == 0x52)
+            {
+                Velocity_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 2000;
+                Velocity_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 2000;
+            }
+            else if (RxBuff[1] == 0x51)
+            {
+                Acc_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 16 * 9.8;
+                Acc_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 16 * 9.8;
+                Acc_Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 16 * 9.8;
+            }
+        }
+
+        // 清空接收缓冲区
+        memset(RxBuff, 0, sizeof(RxBuff));
+
+        // 清除 IDLE 中断标志
+        __HAL_UART_CLEAR_IDLEFLAG(huart);
+
+        // 重新启动DMA接收
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
+
+        // 禁止半传送中断
+        __HAL_DMA_DISABLE_IT(&hdma_usart2_rx, DMA_IT_HT);
+    }
+}
 
 /* USER CODE END Application */
 
