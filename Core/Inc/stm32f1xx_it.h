@@ -61,6 +61,7 @@ void I2C1_EV_IRQHandler(void);
 void I2C1_ER_IRQHandler(void);
 void I2C2_EV_IRQHandler(void);
 void I2C2_ER_IRQHandler(void);
+void USART2_IRQHandler(void);
 void TIM6_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 

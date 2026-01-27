@@ -19,9 +19,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "cmsis_os.h"
-#include "main.h"
 #include "task.h"
+#include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -31,7 +31,7 @@
 #include "encoder.h"
 #include "motor.h"
 // #include "mpu6050.h"
-#include "WT61C.h"
+// #include "WT61C.h"
 #include "oled.h"
 #include "pid.h"
 /* USER CODE END Includes */
@@ -48,8 +48,12 @@ uint8_t receiveData[128];
 int16_t Encoder_Left = 0, Encoder_Right = 0;              // 速度编码
 float Angle_Balance = 0, Gyro_Balance = 0, Gyro_Turn = 0; // mpu6050参数
 
-MPU6050_t MPU6050;
+// MPU6050_t MPU6050;
+uint8_t RxBuff[11];    // 接收缓冲区
 
+float Angle_X, Angle_Y, Angle_Z;           // 角度数据
+float Velocity_Angle_X, Velocity_Angle_Y; // 角速度数据
+float Acc_Angle_X, Acc_Angle_Y, Acc_Angle_Z; // 加速度
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,23 +68,23 @@ MPU6050_t MPU6050;
 /* Definitions for DebugTask */
 osThreadId_t DebugTaskHandle;
 const osThreadAttr_t DebugTask_attributes = {
-    .name = "DebugTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "DebugTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for BTTask */
 osThreadId_t BTTaskHandle;
 const osThreadAttr_t BTTask_attributes = {
-    .name = "BTTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "BTTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for MotorTask */
 osThreadId_t MotorTaskHandle;
 const osThreadAttr_t MotorTask_attributes = {
-    .name = "MotorTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "MotorTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,49 +99,49 @@ void StartMotorTask(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
-void MX_FREERTOS_Init(void)
-{
-    /* USER CODE BEGIN Init */
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
+void MX_FREERTOS_Init(void) {
+  /* USER CODE BEGIN Init */
 
-    /* USER CODE END Init */
+  /* USER CODE END Init */
 
-    /* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-    /* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-    /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-    /* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
-    /* USER CODE BEGIN RTOS_TIMERS */
+  /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-    /* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
-    /* USER CODE BEGIN RTOS_QUEUES */
+  /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-    /* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-    /* Create the thread(s) */
-    /* creation of DebugTask */
-    DebugTaskHandle = osThreadNew(StartDefaultTask, NULL, &DebugTask_attributes);
+  /* Create the thread(s) */
+  /* creation of DebugTask */
+  DebugTaskHandle = osThreadNew(StartDefaultTask, NULL, &DebugTask_attributes);
 
-    /* creation of BTTask */
-    BTTaskHandle = osThreadNew(StartBTTask, NULL, &BTTask_attributes);
+  /* creation of BTTask */
+  BTTaskHandle = osThreadNew(StartBTTask, NULL, &BTTask_attributes);
 
-    /* creation of MotorTask */
-    MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
+  /* creation of MotorTask */
+  MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
 
-    /* USER CODE BEGIN RTOS_THREADS */
+  /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-    /* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
-    /* USER CODE BEGIN RTOS_EVENTS */
+  /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-    /* USER CODE END RTOS_EVENTS */
+  /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -149,10 +153,10 @@ void MX_FREERTOS_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-    /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN StartDefaultTask */
 
-    // // 启动UART2的DMA接收
-    // HAL_UARTEx_ReceiveToIdle_DMA(&huart2, receiveData, sizeof(receiveData));
+    // 启动UART2的DMA接收
+    // HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
 
     // 启动TIM8基础定时器
     HAL_TIM_Base_Start(&htim8);
@@ -184,7 +188,7 @@ void StartDefaultTask(void *argument)
         // HAL_GPIO_TogglePin(Beep_GPIO_Port, Beep_Pin);
         osDelay(1000);
     }
-    /* USER CODE END StartDefaultTask */
+  /* USER CODE END StartDefaultTask */
 }
 
 /* USER CODE BEGIN Header_StartBTTask */
@@ -196,8 +200,7 @@ void StartDefaultTask(void *argument)
 /* USER CODE END Header_StartBTTask */
 void StartBTTask(void *argument)
 {
-    /* USER CODE BEGIN StartBTTask */
-    // int n = 0;
+  /* USER CODE BEGIN StartBTTask */
     /* Infinite loop */
 
     for (;;)
@@ -206,36 +209,30 @@ void StartBTTask(void *argument)
         // Angle_Balance = MPU6050.KalmanAngleY;
         // Gyro_Balance = MPU6050.Gy;
         // Gyro_Turn = MPU6050.Gz;
-
-        // n++;
-
-        // if(n>=50)
-        // {
-        //   printf("Ax:%dg\t Ay:%dg\t Az:%dg\r\nGx:%d°/s\t Gy:%d°/s\t Gz:%d°/s\r\n",
-        //   (int)MPU6050.Ax, (int)MPU6050.Ay, (int)MPU6050.Az, (int)MPU6050.Gx, (int)MPU6050.Gy, (int)MPU6050.Gz);
-        //   n=0;
-        //   // printf("Ax:%.2fg\t Ay:%.2fg\t Az:%.2fg\r\nGx:%.2f°/s\t Gy:%.2f°/s\t Gz:%.2f°/s\r\n",
-        //   // MPU6050.Ax, MPU6050.Ay, MPU6050.Az, MPU6050.Gx, MPU6050.Gy, MPU6050.Gz);
-        //   // printf("Angle:%.2f°\t Gyro.Gy:%.2f°/s \t Gyro.Gz:%.2f°/s \t temperature:%.2f°C\r\n", Angle_Balance, Gyro_Balance, Gyro_Turn, MPU6050.Temperature);
-        // }
-        // for (uint8_t i = 0; i < 256; i++)
-        // {
-        //     OLED_NewFrame();
-        //     OLED_DrawImage((128 - (bilibiliImg.w)) / 2, 0, &bilibiliImg, OLED_COLOR_NORMAL);
-        //     OLED_PrintString(128 - i, 64 - 16, "HELLO_WORLD", &font16x16, OLED_COLOR_NORMAL);
-        //     OLED_ShowFrame();
-        //     osDelay(50);
-        // }
+        
         OLED_NewFrame();
         char strBuffer[32];
-        sprintf(strBuffer, "L:%d", Encoder_Left);
+        sprintf(strBuffer, "X:%d", (int)(Angle_X*100));
         OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_REVERSED);
-        sprintf(strBuffer, "R:%d", Encoder_Right);
+        sprintf(strBuffer, "Y:%d", (int)(Angle_Y*100));
+        OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_REVERSED);
+        sprintf(strBuffer, "Z:%d", (int)(Angle_Z*100));
         OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_REVERSED);
         OLED_ShowFrame();
         osDelay(100);
+
+        // OLED_NewFrame();
+        // char strBuffer[32];
+        // sprintf(strBuffer, "X:%.4f", Angle_X*100);
+        // OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_REVERSED);
+        // sprintf(strBuffer, "Y:%.4f", Angle_Y*100);
+        // OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_REVERSED);
+        // sprintf(strBuffer, "Z:%.4f", Angle_Z*100);
+        // OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_REVERSED);
+        // OLED_ShowFrame();
+        // osDelay(100);
     }
-    /* USER CODE END StartBTTask */
+  /* USER CODE END StartBTTask */
 }
 
 /* USER CODE BEGIN Header_StartMotorTask */
@@ -247,7 +244,7 @@ void StartBTTask(void *argument)
 /* USER CODE END Header_StartMotorTask */
 void StartMotorTask(void *argument)
 {
-    /* USER CODE BEGIN StartMotorTask */
+  /* USER CODE BEGIN StartMotorTask */
     int motor_L, motor_R;
 
     int Balance_Pwm, Velocity_Pwm, Turn_Pwm;
@@ -271,7 +268,7 @@ void StartMotorTask(void *argument)
         // Motor_SetPWM(motor_L,motor_R);
         osDelay(10);
     }
-    /* USER CODE END StartMotorTask */
+  /* USER CODE END StartMotorTask */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -297,8 +294,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 // {
 //     if (huart->Instance == USART2)
 //     {
-//         RxBuff[Rx_Count++] = RxByte;
-//         if (RxBuff[0] == 0x55)
+//         // 检查接收到的数据长度是否正确
+//         if (Size == 11 && RxBuff[0] == 0x55)
 //         {
 //             if (RxBuff[1] == 0x53)
 //             {
@@ -318,16 +315,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //                 Acc_Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 16 * 9.8;
 //             }
 //         }
-//         else
-//         {
-//             Rx_Count = 0;
-//         }
-//         if (Rx_Count > 10)
-//         {
-//             Rx_Count = 0;
-//         }
-//         while (HAL_UART_Receive_IT(&huart2, &RxByte, 1) == HAL_OK)
-//             ;
+//         // 清空接收缓冲区
+//         memset(RxBuff, 0, sizeof(RxBuff));
+//         // 重新启动DMA接收
+//         HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
 //     }
 // }
+
 /* USER CODE END Application */
+
