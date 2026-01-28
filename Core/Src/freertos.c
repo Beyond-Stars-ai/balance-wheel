@@ -19,9 +19,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "task.h"
-#include "main.h"
 #include "cmsis_os.h"
+#include "main.h"
+#include "task.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -49,10 +49,10 @@ int16_t Encoder_Left = 0, Encoder_Right = 0;              // 速度编码
 float Angle_Balance = 0, Gyro_Balance = 0, Gyro_Turn = 0; // mpu6050参数
 
 // MPU6050_t MPU6050;
-uint8_t RxBuff[11];    // 接收缓冲区
+uint8_t RxBuff[11]; // 接收缓冲区
 
-float Angle_X, Angle_Y, Angle_Z;           // 角度数据
-float Velocity_Angle_X, Velocity_Angle_Y; // 角速度数据
+float Angle_X, Angle_Y, Angle_Z;             // 角度数据
+float Velocity_Angle_X, Velocity_Angle_Y;    // 角速度数据
 float Acc_Angle_X, Acc_Angle_Y, Acc_Angle_Z; // 加速度
 /* USER CODE END PD */
 
@@ -68,23 +68,23 @@ float Acc_Angle_X, Acc_Angle_Y, Acc_Angle_Z; // 加速度
 /* Definitions for DebugTask */
 osThreadId_t DebugTaskHandle;
 const osThreadAttr_t DebugTask_attributes = {
-  .name = "DebugTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "DebugTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
 };
 /* Definitions for OLEDTask */
 osThreadId_t OLEDTaskHandle;
 const osThreadAttr_t OLEDTask_attributes = {
-  .name = "OLEDTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+    .name = "OLEDTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityLow,
 };
 /* Definitions for MotorTask */
 osThreadId_t MotorTaskHandle;
 const osThreadAttr_t MotorTask_attributes = {
-  .name = "MotorTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+    .name = "MotorTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,49 +99,49 @@ void StartMotorTask(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
-void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
+void MX_FREERTOS_Init(void)
+{
+    /* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+    /* USER CODE END Init */
 
-  /* USER CODE BEGIN RTOS_MUTEX */
+    /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
+    /* USER CODE END RTOS_MUTEX */
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
+    /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
+    /* USER CODE END RTOS_SEMAPHORES */
 
-  /* USER CODE BEGIN RTOS_TIMERS */
+    /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
+    /* USER CODE END RTOS_TIMERS */
 
-  /* USER CODE BEGIN RTOS_QUEUES */
+    /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+    /* USER CODE END RTOS_QUEUES */
 
-  /* Create the thread(s) */
-  /* creation of DebugTask */
-  DebugTaskHandle = osThreadNew(StartDebugTask, NULL, &DebugTask_attributes);
+    /* Create the thread(s) */
+    /* creation of DebugTask */
+    DebugTaskHandle = osThreadNew(StartDebugTask, NULL, &DebugTask_attributes);
 
-  /* creation of OLEDTask */
-  OLEDTaskHandle = osThreadNew(StartOLEDTask, NULL, &OLEDTask_attributes);
+    /* creation of OLEDTask */
+    OLEDTaskHandle = osThreadNew(StartOLEDTask, NULL, &OLEDTask_attributes);
 
-  /* creation of MotorTask */
-  MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
+    /* creation of MotorTask */
+    MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
 
-  /* USER CODE BEGIN RTOS_THREADS */
+    /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
+    /* USER CODE END RTOS_THREADS */
 
-  /* USER CODE BEGIN RTOS_EVENTS */
+    /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
-
+    /* USER CODE END RTOS_EVENTS */
 }
 
 /* USER CODE BEGIN Header_StartDebugTask */
@@ -153,7 +153,7 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDebugTask */
 void StartDebugTask(void *argument)
 {
-  /* USER CODE BEGIN StartDebugTask */
+    /* USER CODE BEGIN StartDebugTask */
 
     // 启动UART2的DMA接收
     HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
@@ -188,39 +188,39 @@ void StartDebugTask(void *argument)
         // HAL_GPIO_TogglePin(Beep_GPIO_Port, Beep_Pin);
         osDelay(1000);
     }
-  /* USER CODE END StartDebugTask */
+    /* USER CODE END StartDebugTask */
 }
 
 /* USER CODE BEGIN Header_StartOLEDTask */
 /**
-* @brief Function implementing the OLEDTask thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the OLEDTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartOLEDTask */
 void StartOLEDTask(void *argument)
 {
-  /* USER CODE BEGIN StartOLEDTask */
-  /* Infinite loop */
-  for(;;)
-  {
-      // MPU6050_Read_All(&hi2c2, &MPU6050);
-      // Angle_Balance = MPU6050.KalmanAngleY;
-      // Gyro_Balance = MPU6050.Gy;
-      // Gyro_Turn = MPU6050.Gz;
+    /* USER CODE BEGIN StartOLEDTask */
+    /* Infinite loop */
+    for (;;)
+    {
+        // MPU6050_Read_All(&hi2c2, &MPU6050);
+        // Angle_Balance = MPU6050.KalmanAngleY;
+        // Gyro_Balance = MPU6050.Gy;
+        // Gyro_Turn = MPU6050.Gz;
 
-      OLED_NewFrame();
-      char strBuffer[32];
-      sprintf(strBuffer, "X:%d", (int)(Acc_Angle_X*100));
-      OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_NORMAL);
-      sprintf(strBuffer, "Y:%d", (int)(Acc_Angle_Y*100));
-      OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
-      sprintf(strBuffer, "Z:%d", (int)(Acc_Angle_Z*100));
-      OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_NORMAL);
-      OLED_ShowFrame();
-      osDelay(100);
-  }
-  /* USER CODE END StartOLEDTask */
+        OLED_NewFrame();
+        char strBuffer[32];
+        sprintf(strBuffer, "X:%d", (int)(Acc_Angle_X * 100));
+        OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+        sprintf(strBuffer, "Y:%d", (int)(Acc_Angle_Y * 100));
+        OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+        sprintf(strBuffer, "Z:%d", (int)(Acc_Angle_Z * 100));
+        OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+        OLED_ShowFrame();
+        osDelay(100);
+    }
+    /* USER CODE END StartOLEDTask */
 }
 
 /* USER CODE BEGIN Header_StartMotorTask */
@@ -232,7 +232,7 @@ void StartOLEDTask(void *argument)
 /* USER CODE END Header_StartMotorTask */
 void StartMotorTask(void *argument)
 {
-  /* USER CODE BEGIN StartMotorTask */
+    /* USER CODE BEGIN StartMotorTask */
     int motor_L, motor_R;
 
     int Balance_Pwm, Velocity_Pwm, Turn_Pwm;
@@ -256,7 +256,7 @@ void StartMotorTask(void *argument)
         // Motor_SetPWM(motor_L,motor_R);
         osDelay(10);
     }
-  /* USER CODE END StartMotorTask */
+    /* USER CODE END StartMotorTask */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -283,24 +283,26 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     if (huart->Instance == USART2)
     {
         // 检查接收到的数据长度是否正确
-        if (RxBuff[0] == 0x55)
+        if (RxBuff[0] == 0x55 && Size == 11)
         {
-            if (RxBuff[1] == 0x53)
+            switch (RxBuff[1])
             {
+            case 0x53:
                 Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 180;
                 Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 180;
                 Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 180;
-            }
-            else if (RxBuff[1] == 0x52)
-            {
+                break;
+            case 0x52:
                 Velocity_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 2000;
                 Velocity_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 2000;
-            }
-            else if (RxBuff[1] == 0x51)
-            {
+                break;
+            case 0x51:
                 Acc_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 16 * 9.8;
                 Acc_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 16 * 9.8;
                 Acc_Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 16 * 9.8;
+                break;
+            default:
+                break;
             }
         }
 
@@ -319,4 +321,3 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 }
 
 /* USER CODE END Application */
-
