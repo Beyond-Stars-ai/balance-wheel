@@ -43,13 +43,14 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-uint8_t receiveData[128];
+uint8_t receiveData[32];
 
 int16_t Encoder_Left = 0, Encoder_Right = 0;              // 速度编码
 float Angle_Balance = 0, Gyro_Balance = 0, Gyro_Turn = 0; // mpu6050参数
 
 // MPU6050_t MPU6050;
-uint8_t RxBuff[11]; // 接收缓冲区
+// uint8_t RxBuff[11]; // 接收缓冲区
+uint8_t RxBuff[33]; // 接收缓冲区
 
 float Angle_X, Angle_Y, Angle_Z;             // 角度数据
 float Velocity_Angle_X, Velocity_Angle_Y;    // 角速度数据
@@ -217,6 +218,12 @@ void StartOLEDTask(void *argument)
         OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
         sprintf(strBuffer, "Z:%d", (int)(Acc_Angle_Z * 100));
         OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+
+        // sprintf(strBuffer, "L:%d",Acc_Angle_Y);
+        // OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+        // sprintf(strBuffer, "R:%d", Acc_Angle_Y);
+        // OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+
         OLED_ShowFrame();
         osDelay(100);
     }
@@ -278,46 +285,104 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 }
 
+// void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+// {
+//     if (huart->Instance == USART2)
+//     {
+//         // 检查接收到的数据长度是否正确
+//         if (RxBuff[0] == 0x55 && Size == 33)
+//         {
+//             switch (RxBuff[1])
+//             {
+//             case 0x53:
+//                 Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 180;
+//                 Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 180;
+//                 Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 180;
+//                 break;
+//             case 0x52:
+//                 Velocity_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 2000;
+//                 Velocity_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 2000;
+//                 break;
+//             case 0x51:
+//                 Acc_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 16 * 9.8;
+//                 Acc_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 16 * 9.8;
+//                 Acc_Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 16 * 9.8;
+//                 break;
+//             default:
+//                 break;
+//             }
+//         }
+
+//         // 清空接收缓冲区
+//         memset(RxBuff, 0, sizeof(RxBuff));
+
+//         // 清除 IDLE 中断标志
+//         __HAL_UART_CLEAR_IDLEFLAG(huart);
+
+//         // 重新启动DMA接收
+//         HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
+
+//         // 禁止半传送中断
+//         __HAL_DMA_DISABLE_IT(&hdma_usart2_rx, DMA_IT_HT);
+//     }
+// }
+
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-    if (huart->Instance == USART2)
-    {
-        // 检查接收到的数据长度是否正确
-        if (RxBuff[0] == 0x55 && Size == 11)
-        {
-            switch (RxBuff[1])
-            {
-            case 0x53:
-                Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 180;
-                Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 180;
-                Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 180;
-                break;
-            case 0x52:
-                Velocity_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 2000;
-                Velocity_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 2000;
-                break;
-            case 0x51:
-                Acc_Angle_X = ((short)(RxBuff[3] << 8 | RxBuff[2])) / 32768.0 * 16 * 9.8;
-                Acc_Angle_Y = ((short)(RxBuff[5] << 8 | RxBuff[4])) / 32768.0 * 16 * 9.8;
-                Acc_Angle_Z = ((short)(RxBuff[7] << 8 | RxBuff[6])) / 32768.0 * 16 * 9.8;
-                break;
-            default:
-                break;
+    if (huart->Instance == USART2) {
+
+    uint16_t i = 0;
+    
+    // 在接收到的数据中找所有完整的 WT61C 数据包
+    while (i + 11 <= Size) {
+        // 找包头 0x55
+        if (RxBuff[i] == 0x55) {
+            // 校验和检查
+            uint8_t sum = 0;
+            for (int j = 0; j < 10; j++) sum += RxBuff[i + j];
+            
+            if (sum == RxBuff[i + 10]) {
+                // 校验通过，解析这 11 字节
+                int16_t temp;
+                uint8_t type = RxBuff[i + 1];
+                
+                switch (type) {
+                    case 0x51: // 加速度包
+                        temp = (RxBuff[i+3] << 8) | RxBuff[i+2];
+                        Acc_Angle_X = temp / 32768.0f * 16.0f * 9.8f;
+                        temp = (RxBuff[i+5] << 8) | RxBuff[i+4];
+                        Acc_Angle_Y = temp / 32768.0f * 16.0f * 9.8f;
+                        temp = (RxBuff[i+7] << 8) | RxBuff[i+6];
+                        Acc_Angle_Z = temp / 32768.0f * 16.0f * 9.8f;
+                        break;
+                        
+                    case 0x52: // 角速度包
+                        temp = (RxBuff[i+3] << 8) | RxBuff[i+2];
+                        Velocity_Angle_X = temp / 32768.0f * 2000.0f;
+                        temp = (RxBuff[i+5] << 8) | RxBuff[i+4];
+                        Velocity_Angle_Y = temp / 32768.0f * 2000.0f;
+                        break;
+                        
+                    case 0x53: // 角度包
+                        temp = (RxBuff[i+3] << 8) | RxBuff[i+2];
+                        Angle_X = temp / 32768.0f * 180.0f;
+                        temp = (RxBuff[i+5] << 8) | RxBuff[i+4];
+                        Angle_Y = temp / 32768.0f * 180.0f;
+                        temp = (RxBuff[i+7] << 8) | RxBuff[i+6];
+                        Angle_Z = temp / 32768.0f * 180.0f;
+                        break;
+                }
+                i += 11;  // 跳到下一个包
+                continue;
             }
         }
-
-        // 清空接收缓冲区
-        memset(RxBuff, 0, sizeof(RxBuff));
-
-        // 清除 IDLE 中断标志
-        __HAL_UART_CLEAR_IDLEFLAG(huart);
-
-        // 重新启动DMA接收
-        HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
-
-        // 禁止半传送中断
-        __HAL_DMA_DISABLE_IT(&hdma_usart2_rx, DMA_IT_HT);
+        i++;  // 不是包头或校验失败，滑动一个字节
     }
-}
+  }
 
+    // 清除 IDLE 标志并重启 DMA
+    __HAL_UART_CLEAR_IDLEFLAG(huart);
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
+    __HAL_DMA_DISABLE_IT(&hdma_usart2_rx, DMA_IT_HT);
+}
 /* USER CODE END Application */
