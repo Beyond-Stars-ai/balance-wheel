@@ -2,6 +2,9 @@
     "folders": [
         {
             "path": "."
+        },
+        {
+            "path": "C:/Users/Administrator/Downloads/源码汇总/3.PID_Course/08-13.Balanced_Car_PID"
         }
     ],
     "settings": {

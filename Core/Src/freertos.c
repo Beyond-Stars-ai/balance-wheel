@@ -46,6 +46,7 @@
 uint8_t receiveData[32];
 
 int16_t Encoder_Left = 0, Encoder_Right = 0;              // 速度编码
+int motor_L, motor_R;                                     // 电机速度
 float Angle_Balance = 0, Gyro_Balance = 0, Gyro_Turn = 0; // mpu6050参数
 
 // MPU6050_t MPU6050;
@@ -53,7 +54,7 @@ float Angle_Balance = 0, Gyro_Balance = 0, Gyro_Turn = 0; // mpu6050参数
 uint8_t RxBuff[33]; // 接收缓冲区
 
 float Angle_X, Angle_Y, Angle_Z;             // 角度数据
-float Velocity_Angle_X, Velocity_Angle_Y;    // 角速度数据
+float Velocity_Angle_X, Velocity_Angle_Y , Velocity_Angle_Z;    // 角速度数据
 float Acc_Angle_X, Acc_Angle_Y, Acc_Angle_Z; // 加速度
 /* USER CODE END PD */
 
@@ -205,24 +206,30 @@ void StartOLEDTask(void *argument)
     /* Infinite loop */
     for (;;)
     {
-        // MPU6050_Read_All(&hi2c2, &MPU6050);
         // Angle_Balance = MPU6050.KalmanAngleY;
         // Gyro_Balance = MPU6050.Gy;
         // Gyro_Turn = MPU6050.Gz;
 
         OLED_NewFrame();
         char strBuffer[32];
-        sprintf(strBuffer, "X:%d", (int)(Acc_Angle_X * 100));
-        OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_NORMAL);
-        sprintf(strBuffer, "Y:%d", (int)(Acc_Angle_Y * 100));
-        OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
-        sprintf(strBuffer, "Z:%d", (int)(Acc_Angle_Z * 100));
-        OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_NORMAL);
-
-        // sprintf(strBuffer, "L:%d",Acc_Angle_Y);
+        // sprintf(strBuffer, "X:%d", (int)(Acc_Angle_X * 100));
         // OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_NORMAL);
-        // sprintf(strBuffer, "R:%d", Acc_Angle_Y);
+        // sprintf(strBuffer, "Y:%d", (int)(Acc_Angle_Y * 100));
         // OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+        // sprintf(strBuffer, "Z:%d", (int)(Acc_Angle_Z * 100));
+        // OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+
+        // sprintf(strBuffer, "X:%d", (int)(Angle_X * 100));
+        // OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+        // sprintf(strBuffer, "Y:%d", (int)(Angle_Y * 100));
+        // OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+        // sprintf(strBuffer, "Z:%d", (int)(Angle_Z * 100));
+        // OLED_PrintString(0, 32, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+
+        sprintf(strBuffer, "L:%d", motor_L);
+        OLED_PrintString(0, 0, strBuffer, &font16x16, OLED_COLOR_NORMAL);
+        sprintf(strBuffer, "R:%d", motor_R); 
+        OLED_PrintString(0, 16, strBuffer, &font16x16, OLED_COLOR_NORMAL);
 
         OLED_ShowFrame();
         osDelay(100);
@@ -240,15 +247,16 @@ void StartOLEDTask(void *argument)
 void StartMotorTask(void *argument)
 {
     /* USER CODE BEGIN StartMotorTask */
-    int motor_L, motor_R;
-
     int Balance_Pwm, Velocity_Pwm, Turn_Pwm;
+
+    Angle_Balance = Angle_Y;
+    Gyro_Balance = Acc_Angle_X; 
     /* Infinite loop */
     for (;;)
     {
 
         Encoder_Left = Read_Encoder(MOTOR_ID_ML);
-        Encoder_Right = -Read_Encoder(MOTOR_ID_MR);
+        Encoder_Right = -Read_Encoder(MOTOR_ID_MR);  
 
         // Position_L +=Encoder_Left;
         // Position_R +=Encoder_Right;
@@ -260,7 +268,7 @@ void StartMotorTask(void *argument)
         motor_L = Balance_Pwm + Velocity_Pwm + Turn_Pwm; // 计算左轮电机最终PWM Calculate the final PWM of the left wheel motor
         motor_R = Balance_Pwm + Velocity_Pwm - Turn_Pwm; // 计算右轮电机最终PWM Calculate the final PWM of the right wheel motor
 
-        // Motor_SetPWM(motor_L,motor_R);
+        Motor_SetPWM(motor_L,motor_R);
         osDelay(10);
     }
     /* USER CODE END StartMotorTask */
@@ -361,6 +369,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
                         Velocity_Angle_X = temp / 32768.0f * 2000.0f;
                         temp = (RxBuff[i+5] << 8) | RxBuff[i+4];
                         Velocity_Angle_Y = temp / 32768.0f * 2000.0f;
+                        // temp = (RxBuff[i+7] << 8) | RxBuff[i+6];
+                        // Velocity_Angle_Z = temp / 32768.0f * 2000.0f;
                         break;
                         
                     case 0x53: // 角度包
