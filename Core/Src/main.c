@@ -100,7 +100,6 @@ int main(void)
   MX_TIM4_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
-  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   // 初始化OLED
   HAL_Delay(1000); 

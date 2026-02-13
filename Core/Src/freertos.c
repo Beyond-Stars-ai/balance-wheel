@@ -19,9 +19,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "cmsis_os.h"
-#include "main.h"
 #include "task.h"
+#include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -46,7 +46,7 @@
 uint8_t receiveData[32];
 
 int16_t Encoder_Left = 0, Encoder_Right = 0;              // 速度编码
-int motor_L, motor_R;                                     // 电机速度
+int16_t motor_L, motor_R;                                     // 电机速度
 float Angle_Balance = 0, Gyro_Balance = 0, Gyro_Turn = 0; // mpu6050参数
 
 // MPU6050_t MPU6050;
@@ -70,23 +70,23 @@ float Acc_Angle_X, Acc_Angle_Y, Acc_Angle_Z; // 加速度
 /* Definitions for DebugTask */
 osThreadId_t DebugTaskHandle;
 const osThreadAttr_t DebugTask_attributes = {
-    .name = "DebugTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "DebugTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for OLEDTask */
 osThreadId_t OLEDTaskHandle;
 const osThreadAttr_t OLEDTask_attributes = {
-    .name = "OLEDTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "OLEDTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for MotorTask */
 osThreadId_t MotorTaskHandle;
 const osThreadAttr_t MotorTask_attributes = {
-    .name = "MotorTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "MotorTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,49 +101,49 @@ void StartMotorTask(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
-void MX_FREERTOS_Init(void)
-{
-    /* USER CODE BEGIN Init */
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
+void MX_FREERTOS_Init(void) {
+  /* USER CODE BEGIN Init */
 
-    /* USER CODE END Init */
+  /* USER CODE END Init */
 
-    /* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-    /* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-    /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-    /* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
-    /* USER CODE BEGIN RTOS_TIMERS */
+  /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-    /* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
-    /* USER CODE BEGIN RTOS_QUEUES */
+  /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-    /* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-    /* Create the thread(s) */
-    /* creation of DebugTask */
-    DebugTaskHandle = osThreadNew(StartDebugTask, NULL, &DebugTask_attributes);
+  /* Create the thread(s) */
+  /* creation of DebugTask */
+  DebugTaskHandle = osThreadNew(StartDebugTask, NULL, &DebugTask_attributes);
 
-    /* creation of OLEDTask */
-    OLEDTaskHandle = osThreadNew(StartOLEDTask, NULL, &OLEDTask_attributes);
+  /* creation of OLEDTask */
+  OLEDTaskHandle = osThreadNew(StartOLEDTask, NULL, &OLEDTask_attributes);
 
-    /* creation of MotorTask */
-    MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
+  /* creation of MotorTask */
+  MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
 
-    /* USER CODE BEGIN RTOS_THREADS */
+  /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-    /* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
-    /* USER CODE BEGIN RTOS_EVENTS */
+  /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-    /* USER CODE END RTOS_EVENTS */
+  /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_StartDebugTask */
@@ -155,7 +155,7 @@ void MX_FREERTOS_Init(void)
 /* USER CODE END Header_StartDebugTask */
 void StartDebugTask(void *argument)
 {
-    /* USER CODE BEGIN StartDebugTask */
+  /* USER CODE BEGIN StartDebugTask */
 
     // 启动UART2的DMA接收
     HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RxBuff, sizeof(RxBuff));
@@ -184,13 +184,13 @@ void StartDebugTask(void *argument)
     {
         HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
         sprintf((char *)receiveData,
-                "Lv:%d\t Rv:%d\r\n", Encoder_Left, Encoder_Right);
+                "Lv:%d\t Rv:%d\r\n", motor_L, motor_R);
         HAL_UART_Transmit(&huart1, receiveData, sizeof(receiveData), 100);
         memset(receiveData, 0, sizeof(receiveData));
         // HAL_GPIO_TogglePin(Beep_GPIO_Port, Beep_Pin);
         osDelay(1000);
     }
-    /* USER CODE END StartDebugTask */
+  /* USER CODE END StartDebugTask */
 }
 
 /* USER CODE BEGIN Header_StartOLEDTask */
@@ -202,7 +202,7 @@ void StartDebugTask(void *argument)
 /* USER CODE END Header_StartOLEDTask */
 void StartOLEDTask(void *argument)
 {
-    /* USER CODE BEGIN StartOLEDTask */
+  /* USER CODE BEGIN StartOLEDTask */
     /* Infinite loop */
     for (;;)
     {
@@ -234,7 +234,7 @@ void StartOLEDTask(void *argument)
         OLED_ShowFrame();
         osDelay(100);
     }
-    /* USER CODE END StartOLEDTask */
+  /* USER CODE END StartOLEDTask */
 }
 
 /* USER CODE BEGIN Header_StartMotorTask */
@@ -246,7 +246,7 @@ void StartOLEDTask(void *argument)
 /* USER CODE END Header_StartMotorTask */
 void StartMotorTask(void *argument)
 {
-    /* USER CODE BEGIN StartMotorTask */
+  /* USER CODE BEGIN StartMotorTask */
     int Balance_Pwm, Velocity_Pwm, Turn_Pwm;
 
     Angle_Balance = Angle_Y;
@@ -265,13 +265,14 @@ void StartMotorTask(void *argument)
         Velocity_Pwm = Velocity_PI(Encoder_Left, Encoder_Right); // 速度环PID控制
         Turn_Pwm = Turn_PD(Gyro_Turn);                           // 转向环PID控制
 
-        motor_L = Balance_Pwm + Velocity_Pwm + Turn_Pwm; // 计算左轮电机最终PWM Calculate the final PWM of the left wheel motor
+        motor_L = (Balance_Pwm + Velocity_Pwm + Turn_Pwm); // 计算左轮电机最终PWM Calculate the final PWM of the left wheel motor
         motor_R = Balance_Pwm + Velocity_Pwm - Turn_Pwm; // 计算右轮电机最终PWM Calculate the final PWM of the right wheel motor
-
+        motor_L /= 10;
+        motor_R /= 10;
         Motor_SetPWM(motor_L,motor_R);
         osDelay(10);
     }
-    /* USER CODE END StartMotorTask */
+  /* USER CODE END StartMotorTask */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -396,3 +397,4 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     __HAL_DMA_DISABLE_IT(&hdma_usart2_rx, DMA_IT_HT);
 }
 /* USER CODE END Application */
+

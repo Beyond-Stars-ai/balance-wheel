@@ -1,16 +1,18 @@
 #include "motor.h" 
-
-static int16_t PWM_Limit(int16_t IN,int16_t Limit)
+// #include "math.h"
+static int16_t PWM_Limit(int16_t IN,int16_t MAX,int16_t MIN)
 {
-	if(IN > Limit) return Limit;
-	if(IN < -Limit) return -Limit;
-	return IN;
+	if((fabs((float)IN)) > fabs((float)MAX) && IN > 0) return MAX;
+	if((fabs((float)IN)) > fabs((float)MIN) && IN < 0) return -MIN;
+  if((fabs((float)IN)) < fabs((float)MIN) && IN > 0) return MIN;
+  if((fabs((float)IN)) < fabs((float)MAX) && IN < 0) return -MIN;
+  else return IN;
 }
 
 void Motor_SetPWM(int16_t left, int16_t right)
 {
-  left  = PWM_Limit(left*1.04 ,MOTOR_MAX_PWM) *0.7;
-  right = PWM_Limit(right*0.96 ,MOTOR_MAX_PWM) *0.7;
+  left  = PWM_Limit(left*1.04 ,MOTOR_MAX_PWM,MOTOR_MIN_PWM);
+  right = PWM_Limit(right*0.96 ,MOTOR_MAX_PWM,MOTOR_MIN_PWM);
 
   // 左轮
   if (left == 0) {

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #define MOTOR_MAX_PWM (2800)
+#define MOTOR_MIN_PWM (MOTOR_MAX_PWM / 2)
 
 #define PI 3.14159265							//PI圆周率  PI π
 #define Control_Frequency  200.0	//编码器读取频率  Encoder reading frequency
@@ -14,7 +15,7 @@
 #define Reduction_Ratio  30.0			//减速比30  Reduction ratio 30
 #define Perimeter  204.2035 			//周长，单位mm Perimeter, unit mm
 
-#define Target_Velocity (10)
+// #define Target_Velocity (10)
 
 // #define Position_KP (2.2)
 // #define Position_KI (0.013)
